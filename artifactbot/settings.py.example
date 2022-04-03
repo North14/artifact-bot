@@ -1,0 +1,8 @@
+token="<oauth token here>"
+prefix='+'
+initial_channels=[
+        "<channels to join at launch>",
+        ]
+owners=[
+        "<users elevated privileges>",
+        ]

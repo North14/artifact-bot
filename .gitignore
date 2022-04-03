@@ -1,4 +1,5 @@
 settings.py*
+!artifactbot/settings.py.example
 
 artifactpingbot/
 
