@@ -20,5 +20,5 @@ class Suggest:
     async def print_suggestions(self):
         suggestions = await self.get_suggestions()
         for suggestion in suggestions:
-            print(suggestion)
+            self.bot.logger.info(suggestion)
             await self.del_suggestion(suggestion[0])

@@ -2,6 +2,7 @@ settings.py*
 !artifactbot/settings.py.example
 
 artifactpingbot/
+artifactbot/data/
 
 deploy_and_push.sh
 deployment.yaml

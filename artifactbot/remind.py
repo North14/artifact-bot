@@ -27,12 +27,10 @@ class Remind:
                 )
 
     def clear_remind_next_cur(self):
-        print(f"Clearing jobs and movie list")
-        print(self.movie_list)
+        self.bot.logger.info(f"Clearing jobs and movie list")
         for x in self.remind_next_cur:
             x.remove()
         self.remind_next_cur = []
-        self.movie_list = []
 
     async def get_perma_pings(self):
         return await self.bot.database.records(f"SELECT * FROM pinglist")
@@ -55,17 +53,17 @@ class Remind:
             # add perma pings to current remind
             self.remind_next.append(perma_name[0])
         cur_time = datetime.now().strftime("%H:%M")
-        print(f"Movie list before ping: {self.movie_list}")
+        self.bot.logger.info(f"Movie list before ping: {self.movie_list}")
         if self.movie_list and self.movie_list[0][1] == cur_time:
             # add movie pings to current remind
-            print(f"Pinging for movie {self.movie_list[0][0]}")
+            self.bot.logger.info(f"Pinging for movie {self.movie_list[0][0]}")
             cur_movie = self.movie_list[0]
             for username in cur_movie[2]:
                 self.remind_next.append(username)
             base_msg = f"{cur_movie[0]} started DinkDonk"
             self.movie_list.pop(0)
         else:
-            print(f"Found no movie, pinging generic")
+            self.bot.logger.info(f"Found no movie, pinging generic")
             base_msg = "Next dlc started DinkDonk"
         self.remind_next = list(dict.fromkeys(self.remind_next)) # clear duplicate pings
         ping_msg = ""

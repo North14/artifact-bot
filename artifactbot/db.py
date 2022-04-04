@@ -33,3 +33,4 @@ class Database:
     async def executescript(self, path):
         with open(path, "r", encoding="utf-8") as script:
             await self.db.executescript(script.read())
+
