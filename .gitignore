@@ -1,5 +1,8 @@
 settings.py*
+env*
 !artifactbot/settings.py.example
+!env.example
+run.sh
 
 artifactpingbot/
 artifactbot/data/

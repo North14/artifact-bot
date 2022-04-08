@@ -1,6 +1,7 @@
 from twitchio.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
+import os
 import time
 import logging
 import re
@@ -9,7 +10,6 @@ import sys
 from remind import Remind
 from db import Database
 from suggest import Suggest
-from settings import *
 
 def parse_movie_list(movie_list):
     movie_list = re.sub("^.* UTC\+2] ", '', str(movie_list))
@@ -39,13 +39,19 @@ def get_logger(log_file=""):
 class Bot(commands.Bot):
 
     def __init__(self):
+        self.token = os.getenv('twitch_oauth')
+        self.prefix = os.getenv('bot_prefix', '+')
+        self.initial_channels = os.getenv('bot_initial_channels').split(' ')
+        self.owners = os.getenv('bot_owners').split(' ')
+
         self.scheduler = AsyncIOScheduler()
         self.scheduler.configure(timezone='cet')
         self.logger = get_logger(log_file="artifact.log")
+
         self.remind = Remind(self)
         self.database = Database(self)
         self.suggest = Suggest(self)
-        super().__init__(token=token, prefix=prefix, initial_channels=initial_channels)
+        super().__init__(token=self.token, prefix=self.prefix, initial_channels=self.initial_channels)
 
     async def event_ready(self):
         # TODO import variables from disk
@@ -57,26 +63,26 @@ class Bot(commands.Bot):
         self.scheduler.add_job(self.database.commit, 'cron', second=0)
         self.logger.info("Database commit schedule started")
         self.channel: twitchio.Channel = self.get_channel(
-            next(iter(initial_channels))
+                next(iter(self.initial_channels))
         )
         await self.channel.send("Bot is now online!")
 
     @commands.command()
     async def clear(self, ctx: commands.Context):
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         self.remind.clear_remind_next_cur()
         self.remind.movie_list = []
         await ctx.send("List cleared")
 
     @commands.command()
     async def jobs(self, ctx: commands.Context):
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         await ctx.send(f"There are ({len(self.scheduler.get_jobs()):,} jobs in queue")
 
     @commands.command(name="shutdown", aliases=["reboot", "restart", "update"])
     async def shutdown_command(self, ctx: commands.Context):
         # TODO write variables to disk
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         await ctx.send(f"Shutting down")
         self.logger.info("Shutting down from shutdown command")
         self.scheduler.shutdown()
@@ -99,12 +105,12 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def trigger(self, ctx: commands.Context):
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         await self.remind.send_remind_next()
 
     @commands.command()
     async def say(self, ctx: commands.Context):
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         await ctx.send(" ".join(ctx.message.content.split(" ")[1:]))
     
     @commands.command()
@@ -115,7 +121,7 @@ class Bot(commands.Bot):
 
     @commands.command(name="time", aliases=["list"])
     async def parse_list(self, ctx: commands.Context):
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         msgs = ctx.message.content
         
         movie_list = " ".join(str(msgs).split(" ")[1:])
@@ -167,7 +173,7 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def suggestions(self, ctx: commands.Context):
-        if not ctx.author.name in owners: return
+        if not ctx.author.name in self.owners: return
         await self.suggest.print_suggestions()
 
     @commands.command(name="remind", aliases=["remindme", "pingme"])
@@ -254,7 +260,7 @@ class Bot(commands.Bot):
                 "trigger",
                 "jobs",
                 ]
-        if ctx.author.name in owners:
+        if ctx.author.name in self.owners:
             await ctx.send(f"Mod commands: {' '.join(pleb_commands) + ' ' + ' '.join(mod_commands)}")
             return
         await ctx.send(f"Pleb commands: {' '.join(pleb_commands)}")

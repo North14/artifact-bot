@@ -8,9 +8,6 @@ class Suggest:
     async def add_suggestion(self, name, suggestion):
         await self.bot.database.execute(f"INSERT INTO suggestions(Username, Suggestion) VALUES(\"{name}\", \"{suggestion}\")")
 
-    async def del_suggestion(self, name):
-        await self.bot.database.execute(f"DELETE FROM suggestions WHERE Username = \"{name}\"")
-
     async def check_suggested(self, name):
         record = await self.bot.database.record(f"SELECT * FROM suggestions WHERE Username = \"{name}\"")
         if record is None:
@@ -21,4 +18,3 @@ class Suggest:
         suggestions = await self.get_suggestions()
         for suggestion in suggestions:
             self.bot.logger.info(suggestion)
-            await self.del_suggestion(suggestion[0])

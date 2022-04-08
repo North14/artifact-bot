@@ -1,4 +1,3 @@
-from settings import *
 from datetime import datetime
 
 class Remind:
@@ -9,7 +8,7 @@ class Remind:
         self.movie_list = []
     
     async def send_in_channel(self):
-        await self.bot.get_channel(initial_channels[0]).send(msg)
+        await self.bot.get_channel(self.bot.initial_channels[0]).send(msg)
 
     async def add_to_remind_next(self, name):
         # perma_pings = await self.get_perma_pings()
@@ -70,10 +69,10 @@ class Remind:
         for ping in self.remind_next:
             if len(base_msg + ping_msg + ping) > 300:
                 complete_msg = base_msg + ping_msg
-                await self.bot.get_channel(initial_channels[0]).send(complete_msg) 
+                await self.bot.get_channel(self.bot.initial_channels[0]).send(complete_msg) 
                 ping_msg = ""
                 pass
             ping_msg += f" @{ping}"
         complete_msg = base_msg + ping_msg
-        await self.bot.get_channel(initial_channels[0]).send(complete_msg) 
+        await self.bot.get_channel(self.bot.initial_channels[0]).send(complete_msg) 
         self.remind_next = []
