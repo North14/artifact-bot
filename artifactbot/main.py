@@ -67,6 +67,19 @@ class Bot(commands.Bot):
         )
         await self.channel.send("Bot is now online!")
 
+    async def event_message(self, message):
+        if message.echo: return
+        edit_msgs = [
+                "!cmd edit !time",
+                "!cmd edit time",
+                "!command edit !time",
+                "!command edit time"
+                ]
+        if message.content.startswith(tuple(edit_msgs)):
+            await self.parse_list(message.content)
+            return
+        await self.handle_commands(message)
+
     @commands.command()
     async def clear(self, ctx: commands.Context):
         if not ctx.author.name in self.owners: return
@@ -120,11 +133,12 @@ class Bot(commands.Bot):
             await ctx.send(f"/ /mod {msgs[1]} Clueless")
 
     @commands.command(name="time", aliases=["list"])
-    async def parse_list(self, ctx: commands.Context):
+    async def update_movie_list(self, ctx: commands.Context):
+        # TODO: parse list when adding to streamelements too
         if not ctx.author.name in self.owners: return
-        msgs = ctx.message.content
-        
-        movie_list = " ".join(str(msgs).split(" ")[1:])
+        await self.parse_list(ctx.message.content)
+
+    async def parse_list(self, movie_list):
         movies = parse_movie_list(movie_list)
         #  [["movie1", "12:34"], ["movie2", "23:12"]]
         
@@ -150,10 +164,10 @@ class Bot(commands.Bot):
                 self.logger.info(f"Adding job: {movie}")
                 self.remind.movie_list.append(movie)
                 # TODO
-                hour, minute = movie[1].split(':')
+                hour, minute = list(map(int, movie[1].split(':')))
                 self.remind.add_to_remind_next_cur(hour, minute)
         self.logger.info(self.remind.movie_list)
-        await ctx.send(f"{len(self.scheduler.get_jobs()):,} jobs loaded")
+        await self.channel.send(f"{len(self.scheduler.get_jobs()):,} jobs loaded")
 
     @commands.command(name="suggest")
     async def add_suggest(self, ctx: commands.Context):

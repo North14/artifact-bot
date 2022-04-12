@@ -36,7 +36,7 @@ jobs:
           tags: |
             type=schedule
             type=schedule,pattern=nightly
-            type=semver,pattern={{version}},value=v1.0.1
+            type=semver,pattern={{version}},value=v1.0.2
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr

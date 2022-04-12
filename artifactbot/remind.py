@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 
 class Remind:
     def __init__(self, bot):
@@ -18,12 +18,21 @@ class Remind:
         if not name in self.remind_next:
             self.remind_next.append(name)
 
+    def next_datetime(self, current: dt.datetime, hour, minute) -> dt.datetime:
+        repl = current.replace(hour=hour, minute=minute)
+        while repl <= current:
+            repl = repl + dt.timedelta(days=1)
+        return repl
+
     def add_to_remind_next_cur(self, hour, minute):
+        now = dt.datetime.now()
+        time_to_run = self.next_datetime(current=now, hour=hour, minute=minute)
         self.remind_next_cur.append(
                 self.bot.scheduler.add_job(
-                    self.send_remind_next, 'cron', hour=hour, minute=minute
+                    self.send_remind_next, 'date', run_date=time_to_run
                     )
                 )
+        self.bot.logger.info(f"job scheduled to run at {time_to_run}")
 
     def clear_remind_next_cur(self):
         self.bot.logger.info(f"Clearing jobs and movie list")
@@ -51,7 +60,7 @@ class Remind:
         for perma_name in perma_pings:
             # add perma pings to current remind
             self.remind_next.append(perma_name[0])
-        cur_time = datetime.now().strftime("%H:%M")
+        cur_time = dt.datetime.now().strftime("%H:%M")
         self.bot.logger.info(f"Movie list before ping: {self.movie_list}")
         if self.movie_list and self.movie_list[0][1] == cur_time:
             # add movie pings to current remind
