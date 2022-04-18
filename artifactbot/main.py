@@ -75,7 +75,7 @@ class Bot(commands.Bot):
                 "!command edit !time",
                 "!command edit time"
                 ]
-        if message.content.startswith(tuple(edit_msgs)):
+        if message.content.lower().startswith(tuple(edit_msgs)):
             await self.parse_list(message.content)
             return
         await self.handle_commands(message)
@@ -90,7 +90,8 @@ class Bot(commands.Bot):
     @commands.command()
     async def jobs(self, ctx: commands.Context):
         if not ctx.author.name in self.owners: return
-        await ctx.send(f"There are ({len(self.scheduler.get_jobs()):,} jobs in queue")
+        await ctx.send(f"{len(self.remind.remind_next_cur)} jobs loaded")
+        # await ctx.send(f"There are ({len(self.scheduler.get_jobs()):,} jobs in queue")
 
     @commands.command(name="shutdown", aliases=["reboot", "restart", "update"])
     async def shutdown_command(self, ctx: commands.Context):
@@ -121,16 +122,10 @@ class Bot(commands.Bot):
         if not ctx.author.name in self.owners: return
         await self.remind.send_remind_next()
 
-    @commands.command()
-    async def say(self, ctx: commands.Context):
+    @commands.command(name="say", aliases=["echo"])
+    async def echo_command(self, ctx: commands.Context):
         if not ctx.author.name in self.owners: return
         await ctx.send(" ".join(ctx.message.content.split(" ")[1:]))
-    
-    @commands.command()
-    async def mod(self, ctx: commands.Context):
-        msgs = ctx.message.content.split(" ")
-        if msgs[1]:
-            await ctx.send(f"/ /mod {msgs[1]} Clueless")
 
     @commands.command(name="time", aliases=["list"])
     async def update_movie_list(self, ctx: commands.Context):
@@ -167,7 +162,8 @@ class Bot(commands.Bot):
                 hour, minute = list(map(int, movie[1].split(':')))
                 self.remind.add_to_remind_next_cur(hour, minute)
         self.logger.info(self.remind.movie_list)
-        await self.channel.send(f"{len(self.scheduler.get_jobs()):,} jobs loaded")
+        await self.channel.send(f"{len(self.remind.remind_next_cur)} jobs loaded")
+        # await self.channel.send(f"{len(self.scheduler.get_jobs()):,} jobs loaded")
 
     @commands.command(name="suggest")
     async def add_suggest(self, ctx: commands.Context):
@@ -192,13 +188,6 @@ class Bot(commands.Bot):
 
     @commands.command(name="remind", aliases=["remindme", "pingme"])
     async def reminder(self, ctx: commands.Context):
-        """
-        This is a test
-
-        Docstring
-
-        123
-        """
         msgs = ctx.message.content.split(" ")
         self.logger.debug(msgs)
         try:
@@ -217,7 +206,7 @@ class Bot(commands.Bot):
                 await self.remind.add_perma_ping(ctx.author.name)
                 return
             else:
-                if len(self.scheduler.get_jobs()) == 0:
+                if len(self.remind.remind_next_cur) == 0:
                     await ctx.send(f"There are no dlcs loaded right now")
                     return
                 movie = " ".join(msgs[1:]) 
